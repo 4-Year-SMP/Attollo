@@ -38,7 +38,7 @@ ext {
 
 version = "%s%s".format(Locale.ROOT, baseVersion, extension)
 
-val minecraftVersion = "1.20.1"
+val minecraftVersion = "1.20.2"
 val supportedMinecraftVersions = listOf(
     "1.16.5",
     "1.17",
@@ -53,6 +53,7 @@ val supportedMinecraftVersions = listOf(
     "1.19.4",
     "1.20",
     "1.20.1",
+    "1.20.2"
 )
 
 repositories {
@@ -70,7 +71,7 @@ dependencies {
     // testing
     testImplementation(kotlin("test"))
     testImplementation("io.papermc.paper:paper-api:$minecraftVersion-R0.1-SNAPSHOT")
-    testImplementation("com.github.seeseemelk:MockBukkit-v1.19:3.1.0")
+    testImplementation("com.github.seeseemelk:MockBukkit-v1.20:3.29.2")
     testImplementation("io.mockk:mockk:1.13.8")
 }
 
