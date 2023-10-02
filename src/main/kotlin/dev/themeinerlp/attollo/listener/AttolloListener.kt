@@ -52,17 +52,36 @@ class AttolloListener(private val attollo: Attollo) : Listener {
         found.yaw = location.yaw
         found.pitch = location.pitch
 
+        /**
+         * The modifiedLocation is needed for teleporting the player to the right spot on top of the elevator block
+         */
         val modifiedLocation = found.clone().add(0.5, 1.0, 0.5)
+
+        /**
+         * isMaxHeight, isMinHeight and isAllowBedrockTeleport are config values the user can set to limit elevator usage to a certain height or block limit
+         * This can be useful for the user to prevent players to teleport on top of the nether roof or other places
+         */
+        val isMaxHeight = !this.attollo.maxHeightOption
+        val isMinHeight = !this.attollo.minHeightOption
+        val isAllowBedrockTeleport = !this.attollo.allowBedrockTeleport
+
+        /**
+         * Prevent players to get stuck or to be trapped inside a block that is above the teleporter
+         */
         if (modifiedLocation.block.type != Material.AIR) return
-        if (modifiedLocation.y.toInt() == height && !this.attollo.maxHeightOption) {
-            player.sendMessage(Component.text("You can't teleport to max build height"))
+        if (modifiedLocation.blockY == height && isMaxHeight) {
+            player.sendMessage(Component.text("You can't teleport to max build height!"))
             return
         }
-        if (modifiedLocation.y.toInt() == depth && !this.attollo.minHeightOption) {
-            player.sendMessage(Component.text("You can't teleport to min build height"))
+        if (modifiedLocation.blockY == depth && isMinHeight) {
+            player.sendMessage(Component.text("You can't teleport to min build height!"))
             return
         }
-        if (foundBlockBelow.)
+        val blockBelow = block.world.getBlockAt(blockLocation.clone().add(0.0,-1.0,0.0))
+        if (blockBelow.type == Material.BEDROCK && isAllowBedrockTeleport) {
+            player.sendMessage(Component.text("You can't teleport to the top of a bedrock block!"))
+            return
+        }
         player.teleportAsync(modifiedLocation)
     }
 }
