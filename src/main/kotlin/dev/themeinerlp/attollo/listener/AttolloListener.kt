@@ -2,6 +2,7 @@ package dev.themeinerlp.attollo.listener
 
 import dev.themeinerlp.attollo.Attollo
 import dev.themeinerlp.attollo.USE_PERMISSION
+import net.kyori.adventure.text.Component
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -50,11 +51,18 @@ class AttolloListener(private val attollo: Attollo) : Listener {
         }
         found.yaw = location.yaw
         found.pitch = location.pitch
+
         val modifiedLocation = found.clone().add(0.5, 1.0, 0.5)
-        if (modifiedLocation.block.type != Material.AIR) {
+        if (modifiedLocation.block.type != Material.AIR) return
+        if (modifiedLocation.y.toInt() == height && !this.attollo.maxHeightOption) {
+            player.sendMessage(Component.text("You can't teleport to max build height"))
             return
         }
-       player.teleportAsync(modifiedLocation)
+        if (modifiedLocation.y.toInt() == depth && !this.attollo.minHeightOption) {
+            player.sendMessage(Component.text("You can't teleport to min build height"))
+            return
+        }
+        if (foundBlockBelow.)
+        player.teleportAsync(modifiedLocation)
     }
-
 }
