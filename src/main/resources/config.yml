@@ -1,3 +1,12 @@
 # Allows to change the elevator block
 # Default is: DAYLIGHT_DETECTOR
 elevatorBlock: 'DAYLIGHT_DETECTOR'
+# Allows players to teleport to max height limit
+# Default is: false
+maxHeightTeleport: false
+# Allows players to teleport to the min height limit
+# Default is: false
+minHeightTeleport: false
+# Allows players to get above bedrock layer
+# Default is: false
+allowBedrockTeleport: false
