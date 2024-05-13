@@ -1,4 +1,5 @@
 rootProject.name = "Attollo"
+includeBuild("build-logic")
 pluginManagement {
     repositories {
         gradlePluginPortal()

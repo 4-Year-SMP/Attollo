@@ -12,6 +12,7 @@ plugins {
     id("io.papermc.hangar-publish-plugin") version "0.1.2"
     id("com.modrinth.minotaur") version "2.+"
     id("org.jetbrains.changelog") version "2.2.0"
+    id("olf.build-logic")
 }
 if (!File("$rootDir/.git").exists()) {
     logger.lifecycle(
@@ -25,19 +26,6 @@ if (!File("$rootDir/.git").exists()) {
 }
 
 group = "dev.themeinerlp"
-var baseVersion by extra("1.2.0")
-var extension by extra("")
-var snapshot by extra("-SNAPSHOT")
-ext {
-    val git: Grgit = Grgit.open {
-        dir = File("$rootDir/.git")
-    }
-    val revision = git.head().abbreviatedId
-    extension = "%s+%s".format(Locale.ROOT, snapshot, revision)
-}
-
-version = "%s%s".format(Locale.ROOT, baseVersion, extension)
-
 val minecraftVersion = "1.20.1"
 val supportedMinecraftVersions = listOf(
     "1.16.5",
@@ -147,39 +135,50 @@ changelog {
     groups.set(listOf("Added", "Changed", "Deprecated", "Removed", "Fixed", "Security"))
 }
 
-hangarPublish {
-    publications.register("Attollo") {
-        version = project.version as String
-        id = "Attollo"
-        channel = "HANGAR_CHANNEL"
-        changelog =
-            project.changelog.renderItem(
-                project.changelog.getOrNull(baseVersion) ?: project.changelog.getUnreleased()
-            )
+val branch = rootProject.branchName()
+val baseVersion = project.version as String
+val isRelease = !baseVersion.contains('-')
+val isMainBranch = branch == "master"
+if (!isRelease || isMainBranch) { // Only publish releases from the main branch
+    val suffixedVersion =
+        if (isRelease) baseVersion else baseVersion + "+" + System.getenv("GITHUB_RUN_NUMBER")
+    val changelogContent = if (isRelease) {
+        "See [GitHub](https://github.com/OneLiteFeatherNET/BetterGoPaint) for release notes."
+    } else {
+        val commitHash = rootProject.latestCommitHash()
+        "[$commitHash](https://github.com/OneLiteFeatherNET/BetterGoPaint/commit/$commitHash) ${rootProject.latestCommitMessage()}"
+    }
+    hangarPublish {
+        publications.register("Attollo") {
+            version.set(suffixedVersion)
+            channel.set(if (isRelease) "Release" else if (isMainBranch) "Snapshot" else "Alpha")
+            id.set("Attollo")
+            changelog.set(changelogContent)
 
-        apiKey = System.getenv("HANGAR_SECRET")
+            apiKey = System.getenv("HANGAR_SECRET")
 
-        platforms {
-            register(Platforms.PAPER) {
-                jar.set(tasks.shadowJar.flatMap { it.archiveFile })
-                platformVersions.set(supportedMinecraftVersions)
+            platforms {
+                register(Platforms.PAPER) {
+                    jar.set(tasks.shadowJar.flatMap { it.archiveFile })
+                    platformVersions.set(supportedMinecraftVersions)
+                }
             }
         }
     }
-}
-modrinth {
-    token.set(System.getenv("MODRINTH_TOKEN"))
-    projectId.set("ULt9SvKn")
-    versionNumber.set(version.toString())
-    versionType.set(System.getenv("MODRINTH_CHANNEL"))
-    uploadFile.set(tasks.shadowJar as Any)
-    gameVersions.addAll(supportedMinecraftVersions)
-    loaders.add("paper")
-    loaders.add("bukkit")
-    loaders.add("folia")
-    changelog.set(
-        project.changelog.renderItem(
-            project.changelog.getOrNull(baseVersion) ?: project.changelog.getUnreleased()
+    modrinth {
+        token.set(System.getenv("MODRINTH_TOKEN"))
+        projectId.set("ULt9SvKn")
+        versionNumber.set(version.toString())
+        versionType.set(System.getenv("MODRINTH_CHANNEL"))
+        uploadFile.set(tasks.shadowJar as Any)
+        gameVersions.addAll(supportedMinecraftVersions)
+        loaders.add("paper")
+        loaders.add("bukkit")
+        loaders.add("folia")
+        changelog.set(
+            project.changelog.renderItem(
+                project.changelog.getOrNull(baseVersion) ?: project.changelog.getUnreleased()
+            )
         )
-    )
+    }
 }
